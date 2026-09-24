@@ -6,9 +6,9 @@ from pathlib import Path
 from openpyxl import Workbook
 
 BASE_DIR = Path(r"C:\Users\EDY\Desktop\26年第三季度\资讯关联基金产品\code")
-SRC = BASE_DIR / "index.txt"
-XLSX_OUT = BASE_DIR / "index.xlsx"
-JSON_OUT = BASE_DIR / "index.json"
+SRC = BASE_DIR / "data" / "index.txt"
+XLSX_OUT = BASE_DIR / "data" / "index.xlsx"
+JSON_OUT = BASE_DIR / "data" / "index.json"
 
 
 def main() -> None:
@@ -19,10 +19,13 @@ def main() -> None:
     # Build a flat list with consistent fields
     flat = [
         {
-            "INDEX_CODE": r.get("INDEX_CODE", ""),
-            "INDEX_NAME": r.get("INDEX_NAME", ""),
-            "INDEX_ABSTRACT": r.get("INDEX_ABSTRACT", ""),
-            "INDEX_REMARK": r.get("INDEX_REMARK", ""),
+            "INDEX_CODE": r.get("INDEX_CODE") or "",
+            "INDEX_NAME": r.get("INDEX_NAME") or "",
+            "INDEX_TYPE_NAME": r.get("INDEX_TYPE_NAME") or "",
+            "ETF_COUNT": r.get("ETF_COUNT") or 0,
+            "HTF_ETF_COUNT": r.get("HTF_ETF_COUNT") or 0,
+            "INDEX_ABSTRACT": r.get("INDEX_ABSTRACT") or "",
+            "INDEX_REMARK": r.get("INDEX_REMARK") or "",
         }
         for r in records
     ]
@@ -39,18 +42,21 @@ def main() -> None:
     wb = Workbook()
     ws = wb.active
     ws.title = "Indexes"
-    headers = ["INDEX_CODE", "INDEX_NAME", "INDEX_ABSTRACT", "INDEX_REMARK"]
+    headers = [
+        "INDEX_CODE", "INDEX_NAME", "INDEX_TYPE_NAME",
+        "ETF_COUNT", "HTF_ETF_COUNT", "INDEX_ABSTRACT", "INDEX_REMARK",
+    ]
     ws.append(headers)
     for row in flat:
         ws.append([row[h] for h in headers])
 
     # Adjust column widths so the content is readable
-    widths = {"A": 14, "B": 24, "C": 60, "D": 80}
+    widths = {"A": 14, "B": 24, "C": 14, "D": 10, "E": 14, "F": 60, "G": 80}
     for col, w in widths.items():
         ws.column_dimensions[col].width = w
 
     # Wrap text and align top for long fields
-    for cell in ws["C"][1:] + ws["D"][1:]:
+    for cell in ws["F"][1:] + ws["G"][1:]:
         cell.alignment = cell.alignment.copy(wrap_text=True, vertical="top")
 
     wb.save(XLSX_OUT)
